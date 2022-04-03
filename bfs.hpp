@@ -37,6 +37,8 @@ void parallel_bfs(const T &initial_state, int worker_cnt) {
   size_t vis_cnt = 0;
   size_t q_size;
   while ((q_size = q0.size())) {
+    std::cerr << "step size: " << q_size << '\n';
+
     vis_cnt += q_size;
     size_t per_worker = (q_size + worker_cnt - 1) / worker_cnt;
 

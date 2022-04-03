@@ -1,8 +1,11 @@
 #include "bfs.hpp"
+#include <cassert>
 #include <iostream>
+#include <string>
+
+size_t max_len = 0;
 
 struct S {
-  static constexpr size_t max_len = 22;
 
   std::vector<int> a;
 
@@ -46,10 +49,8 @@ struct S {
   }
 };
 
-int main() {
-  //*
-  parallel_bfs(S{}, 4);
-  /*/
-  concurrent_bfs(S{});
-  // */
+int main(int argc, char *argv[]) {
+  assert(argc == 3);
+  max_len = std::stoi(argv[2]);
+  parallel_bfs(S{}, std::stoi(argv[1]));
 }
