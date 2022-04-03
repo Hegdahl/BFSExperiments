@@ -48,7 +48,7 @@ struct S {
 
 int main() {
   //*
-  parallel_bfs(S{}, 1);
+  parallel_bfs(S{}, 4);
   /*/
   concurrent_bfs(S{});
   // */

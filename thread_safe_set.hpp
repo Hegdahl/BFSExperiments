@@ -1,30 +1,34 @@
-#include <atomic>
 #include <cstddef>
+#include <mutex>
 #include <utility>
 
 template<class T>
 class thread_safe_set {
+  static constexpr size_t sz = 1<<24;
+    
   struct Node {
     T here;
-    std::atomic<Node*> next = nullptr;
+    Node* next = nullptr;
   };
 
-  std::atomic<Node*> have[1<<28]{};
+  Node* have[sz]{};
+  std::mutex muteces[sz];
 
  public:
 
   // return true if already there
   bool check_and_emplace(const T &t) {
-    std::atomic<Node*> &nd = find(t);
-    if (nd) return true;
-    nd = new Node{t, nullptr};
-    return false;
-  }
+    size_t key = t.hash() % sz;
+    std::lock_guard<std::mutex> lock(muteces[key]);
 
-  std::atomic<Node*> &find(const T &t) {
-    std::atomic<Node*> *nd = have + t.hash() % (1 << 25);
-    while (*nd && (**nd).here != t)
-      nd = &(**nd).next;
-    return *nd;
+    Node **nd = have + key;
+    while (*nd) {
+      if ((*nd)->here == t)
+        return true;
+      nd = &(*nd)->next;
+    }
+
+    *nd = new Node{t, nullptr};
+    return false;
   }
 };
