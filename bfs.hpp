@@ -25,11 +25,11 @@ void parallel_bfs_step(
 }
 
 template<class T>
-void parallel_bfs(const T &initial_state, int worker_cnt) {
+void parallel_bfs(const T &initial_state, int worker_cnt, int hash_table_bit_cnt) {
   chunked_vector<T> q0(worker_cnt), q1(worker_cnt);
   q0.chunks[0].push_back(initial_state);
 
-  thread_safe_set<T> vis;
+  thread_safe_set<T> vis(hash_table_bit_cnt);
   vis.check_and_emplace(initial_state);
 
   std::vector<std::thread> workers(worker_cnt);

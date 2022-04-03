@@ -50,7 +50,15 @@ struct S {
 };
 
 int main(int argc, char *argv[]) {
-  assert(argc == 3);
-  max_len = std::stoi(argv[2]);
-  parallel_bfs(S{}, std::stoi(argv[1]));
+  if (argc != 4) {
+    std::cout << "usage:\n";
+    std::cout << argv[0] << " max_len hash_table_bit_cnt thread_count\n";
+    return 0;
+  }
+
+  max_len = std::stoi(argv[1]);
+  int hash_table_bit_cnt = std::stoi(argv[2]);
+  int thread_count = std::stoi(argv[3]);
+
+  parallel_bfs(S{}, thread_count, hash_table_bit_cnt);
 }
