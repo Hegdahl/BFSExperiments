@@ -8,6 +8,10 @@
 
 size_t max_len = 0;
 
+/**
+ * Dummy object to test potential
+ * speedup from parallelism.
+ */
 struct S {
   std::vector<int> a;
 
@@ -46,6 +50,9 @@ struct S {
 
 namespace std {
 
+/**
+ * Extend std to make S hashable.
+ */
 template<>
 struct hash<S> {
   size_t operator()(const S &s) const {
@@ -58,11 +65,19 @@ struct hash<S> {
 
 } // namespace std
 
+/**
+ * max_len:
+ *      number of bits to use in the dummy nodes.
+ * hash_table_bit_cnt:
+ *      number of bits to use in the indices in the hash table
+ * thread_count:
+ *      number of threads to use
+ */
 int main(int argc, char *argv[]) {
   if (argc != 4) {
     std::cout << "usage:\n";
     std::cout << argv[0] << " max_len hash_table_bit_cnt thread_count\n";
-    return 0;
+    return 1;
   }
 
   max_len = std::stoi(argv[1]);
