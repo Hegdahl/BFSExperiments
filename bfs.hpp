@@ -4,95 +4,93 @@
 #include "thread_safe_set.hpp"
 
 #include <iostream>
+#include <memory>
 #include <thread>
-#include <unordered_set>
 #include <utility>
+
+namespace bfs_detail {
+
+template<class T>
+struct deref_hash {
+  decltype(auto) operator()(const T *x) const {
+    return std::hash<T>{}(*x);
+  }
+};
+
+template<class T>
+struct deref_equal {
+  decltype(auto) operator()(const T *l, const T *r) const {
+    return *l == *r;
+  }
+};
 
 template<class T>
 void parallel_bfs_step(
-    thread_safe_set<T> *vis,
-    typename chunked_vector<T>::iterator begin,
-    typename chunked_vector<T>::iterator end,
-    std::vector<T> *new_q) {
+    thread_safe_set<const T*, deref_hash<T>, deref_equal<T>> *vis,
+    //thread_safe_set<T> *vis,
+    typename chunked_vector<std::unique_ptr<T>>::iterator begin,
+    typename chunked_vector<std::unique_ptr<T>>::iterator end,
+    std::vector<std::unique_ptr<T>> *new_q) {
   for (; begin != end; ++begin) {
-    T &current = *begin;
-    for (T &next : current.get_transitions()) {
-      if (vis->check_and_emplace(next))
+    T *current = (*begin).get();
+    for (std::unique_ptr<T> &next : current->get_transitions()) {
+      if (vis->check_and_emplace(next.get()))
         continue;
-      new_q->push_back(next);
+      new_q->push_back(std::move(next));
     }
   }
 }
 
+} // namespace bfs_detail
+
 template<class T>
-void parallel_bfs(const T &initial_state, int worker_cnt, int hash_table_bit_cnt) {
-  chunked_vector<T> q0(worker_cnt), q1(worker_cnt);
-  q0.chunks[0].push_back(initial_state);
+void bfs(const T &initial_state, int worker_cnt, int hash_table_bit_cnt) {
 
-  thread_safe_set<T> vis(hash_table_bit_cnt);
-  vis.check_and_emplace(initial_state);
+  std::vector<chunked_vector<std::unique_ptr<T>>> layers;
+  layers.emplace_back(worker_cnt);
+  layers.back().chunk(0).push_back(std::make_unique<T>(initial_state));
 
-  std::vector<std::thread> workers(worker_cnt);
+  thread_safe_set<const T*, bfs_detail::deref_hash<T>, bfs_detail::deref_equal<T>> vis(hash_table_bit_cnt);
+  vis.check_and_emplace((*layers.back().begin()).get());
+  //thread_safe_set<T> vis(hash_table_bit_cnt);
+  //vis.check_and_emplace(**layers.back().begin());
+
+  //std::vector<std::thread> workers(worker_cnt);
 
   size_t vis_cnt = 0;
   size_t q_size;
-  while ((q_size = q0.size())) {
+  while ((q_size = layers.back().size())) {
     std::cerr << "step size: " << q_size << '\n';
 
-    vis_cnt += q_size;
-    size_t per_worker = (q_size + worker_cnt - 1) / worker_cnt;
+    layers.emplace_back(worker_cnt);
 
+    vis_cnt += q_size;
+
+    bfs_detail::parallel_bfs_step(
+        &vis,
+        layers.end()[-2].begin(),
+        layers.end()[-2].end(),
+        &layers.end()[-1].chunk(0)
+    );
+
+    /*
+    size_t per_worker = (q_size + worker_cnt - 1) / worker_cnt;
     for (int worker_id = 0; worker_id < worker_cnt; ++worker_id) {
       size_t begin = std::min(per_worker * worker_id, q_size);
       size_t end = std::min(per_worker * (worker_id + 1), q_size);
 
       workers[worker_id] = std::thread(
-        parallel_bfs_step<T>,
-        &vis,
-        q0.begin() + begin,
-        q0.begin() + end,
-        &q1.chunks[worker_id]
+          bfs_detail::parallel_bfs_step<T>,
+          &vis,
+          layers.end()[-2].begin() + begin,
+          layers.end()[-2].begin() + end,
+          &layers.end()[-1].chunk(worker_id)
       );
     }
 
     for (std::thread &worker : workers)
       worker.join();
-
-    std::swap(q0, q1);
-    q1.clear();
-  }
-
-  std::cerr << "total #visits: " << vis_cnt << '\n';
-}
-
-struct hasher {
-  template<class T>
-  auto operator()(const T &x) const {
-    return x.hash();
-  }
-};
-
-template<class T>
-void concurrent_bfs(const T &initial_state) {
-  std::vector<T> q0 {initial_state}, q1;
-
-  std::unordered_set<T, hasher> vis;
-  vis.insert(initial_state);
-
-  size_t vis_cnt = 0;
-  while (q0.size()) {
-    vis_cnt += q0.size();
-
-    for (T &current : q0) {
-      for (T &next : current.get_transitions()) {
-        if (!vis.emplace(next).second)
-          continue;
-        q1.push_back(std::move(next));
-      }
-    }
-
-    std::swap(q0, q1);
-    q1.clear();
+    */
   }
 
   std::cerr << "total #visits: " << vis_cnt << '\n';
