@@ -115,14 +115,14 @@ int main() {
   //*
   set_max_len(20);
   TIME(sequential_bfs(cheap_sparse, S{}));
-  TIME(bfs_phmap(cheap_sparse, S{}, 64));
+  //TIME(bfs_phmap(cheap_sparse, S{}, 64));
   TIME(bfs_phmap(cheap_sparse, S{}, 32));
   TIME(bfs_phmap(cheap_sparse, S{}, 16));
   TIME(bfs_phmap(cheap_sparse, S{}, 8));
   TIME(bfs_phmap(cheap_sparse, S{}, 4));
   TIME(bfs_phmap(cheap_sparse, S{}, 2));
   TIME(bfs_phmap(cheap_sparse, S{}, 1));
-  TIME(bfs_fixed_size_set(cheap_sparse, S{}, 64, max_len));
+  //TIME(bfs_fixed_size_set(cheap_sparse, S{}, 64, max_len));
   TIME(bfs_fixed_size_set(cheap_sparse, S{}, 32, max_len));
   TIME(bfs_fixed_size_set(cheap_sparse, S{}, 16, max_len));
   TIME(bfs_fixed_size_set(cheap_sparse, S{}, 8, max_len));
@@ -135,14 +135,14 @@ int main() {
   //*
   set_max_len(15);
   TIME(sequential_bfs(cheap_dense, S{}));
-  TIME(bfs_phmap(cheap_dense, S{}, 64));
+  //TIME(bfs_phmap(cheap_dense, S{}, 64));
   TIME(bfs_phmap(cheap_dense, S{}, 32));
   TIME(bfs_phmap(cheap_dense, S{}, 16));
   TIME(bfs_phmap(cheap_dense, S{}, 8));
   TIME(bfs_phmap(cheap_dense, S{}, 4));
   TIME(bfs_phmap(cheap_dense, S{}, 2));
   TIME(bfs_phmap(cheap_dense, S{}, 1));
-  TIME(bfs_fixed_size_set(cheap_dense, S{}, 64, max_len));
+  //TIME(bfs_fixed_size_set(cheap_dense, S{}, 64, max_len));
   TIME(bfs_fixed_size_set(cheap_dense, S{}, 32, max_len));
   TIME(bfs_fixed_size_set(cheap_dense, S{}, 16, max_len));
   TIME(bfs_fixed_size_set(cheap_dense, S{}, 8, max_len));
@@ -155,14 +155,14 @@ int main() {
   //*
   set_max_len(20);
   TIME(sequential_bfs(expensive_sparse, S{}));
-  TIME(bfs_phmap(expensive_sparse, S{}, 64));
+  //TIME(bfs_phmap(expensive_sparse, S{}, 64));
   TIME(bfs_phmap(expensive_sparse, S{}, 32));
   TIME(bfs_phmap(expensive_sparse, S{}, 16));
   TIME(bfs_phmap(expensive_sparse, S{}, 8));
   TIME(bfs_phmap(expensive_sparse, S{}, 4));
   TIME(bfs_phmap(expensive_sparse, S{}, 2));
   TIME(bfs_phmap(expensive_sparse, S{}, 1));
-  TIME(bfs_fixed_size_set(expensive_sparse, S{}, 64, max_len));
+  //TIME(bfs_fixed_size_set(expensive_sparse, S{}, 64, max_len));
   TIME(bfs_fixed_size_set(expensive_sparse, S{}, 32, max_len));
   TIME(bfs_fixed_size_set(expensive_sparse, S{}, 16, max_len));
   TIME(bfs_fixed_size_set(expensive_sparse, S{}, 8, max_len));
