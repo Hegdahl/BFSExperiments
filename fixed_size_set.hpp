@@ -23,7 +23,7 @@ template<
  class Key,
  class Hash = std::hash<Key>,
  class KeyEqual = std::equal_to<Key>
-> class thread_safe_set {
+> class fixed_size_set {
  public:
 
   /**
@@ -35,7 +35,7 @@ template<
    * @param hash      Instance to use of the Hash function-object type
    * @param key_equal Instance to use of the KeyEqual function-object type
    */
-  thread_safe_set(
+  fixed_size_set(
       int bits,
       uint64_t seed = std::chrono::steady_clock::now().time_since_epoch().count(),
       const Hash &hash = Hash(),
@@ -47,14 +47,27 @@ template<
     buckets_(size_t(1)<<bits) {}
 
   /**
+   * @brief holds a member
+   * boolean with the name
+   * second to allow drop in
+   * replacement for std::set
+   */
+  struct second_holder {
+    bool second;
+    operator bool() {
+      return second;
+    }
+  };
+
+  /**
    * Insert a key in a set if it is not there,
    * and return whether it was already there.
    *
    * @param  key The key to insert
-   * @return true if the element was already there,
-   *         false otherwise.
+   * @return true if the element was inserted,
+   *         and false if it was already there.
    */
-  bool check_and_emplace(const Key &key) {
+  second_holder emplace(const Key &key) {
     size_t index = get_index(key);
     auto &[mutex, bucket] = buckets_[index];
     std::lock_guard<std::mutex> lock(mutex);
@@ -64,10 +77,10 @@ template<
     });
 
     if (already != bucket.end())
-      return true;
+      return {false};
     
     bucket.push_front(key);
-    return false;
+    return {true};
   }
 
  private:
@@ -79,6 +92,13 @@ template<
   const int bits_;
   std::vector<std::pair<std::mutex, std::forward_list<Key>>> buckets_;
 
+  /**
+   * @brief Post-hash used to to mitigate
+   * issues from a bad distribution from hash_
+   * 
+   * @param x hash value with a possibly bad distribution when truncated
+   * @return  a new hash with low-bits hopefully better distributed
+   */
   static uint64_t splitmix64(uint64_t x) {
     // http://xorshift.di.unimi.it/splitmix64.c
     x += 0x9e3779b97f4a7c15;
@@ -87,7 +107,12 @@ template<
     return x ^ (x >> 31);
   }
 
-  // find the index of the bucket given a key
+  /**
+   * @brief maps a key to an index in [0, 2**bits)
+   * 
+   * @param key     the key to find an index for
+   * @return size_t the index
+   */
   size_t get_index(const Key &key) {
     uint64_t hash = splitmix64(hash_(key) + fixed_random_);
     return hash & ((size_t(1) << bits_) - 1);

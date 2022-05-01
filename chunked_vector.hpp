@@ -175,13 +175,13 @@ class chunked_vector<T>::iterator_base
     return *(*this + offset);
   }
 
-  iterator operator++(int) const {
+  iterator operator++(int) {
     iterator cpy = *this;
-    ++this;
+    ++*this;
     return cpy;
   }
 
-  iterator operator--(int) const {
+  iterator operator--(int) {
     iterator cpy = *this;
     --this;
     return cpy;
